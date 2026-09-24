@@ -1,0 +1,59 @@
+.dashboard-game-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1rem;
+  min-width: min(100%, 23rem);
+}
+
+.score-code-form {
+  width: 100%;
+  border-top: 1px solid var(--soft-line);
+  padding-top: 1rem;
+}
+
+.score-code-form label {
+  display: block;
+  margin-bottom: .55rem;
+  font: 700 .72rem var(--mono);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.score-code-entry {
+  display: flex;
+  gap: .5rem;
+}
+
+.score-code-entry input {
+  flex: 1;
+  min-width: 0;
+  width: 9rem;
+  padding: .65rem .75rem;
+  border: 1px solid #777b7e;
+  border-radius: 0;
+  background: #1f2224;
+  color: var(--bone);
+  font: 700 1rem var(--mono);
+  letter-spacing: .15em;
+  text-transform: uppercase;
+}
+
+.score-code-entry .button { gap: 0; }
+.score-code-form .field-help { display: block; margin-top: .45rem; }
+.score-code-form .form-error,
+.score-code-success { margin: .7rem 0 0; padding: .65rem .8rem; font-size: .85rem; }
+.score-code-success { border-left: 3px solid var(--bone); background: #282d2c; }
+.score-code-feedback:empty { margin: 0; padding: 0; border: 0; }
+
+@media (max-width: 800px) {
+  .dashboard-game { grid-template-columns: 1fr; }
+  .dashboard-game-controls { align-items: stretch; width: 100%; }
+  .dashboard-game-action { flex-wrap: wrap; justify-content: flex-start; }
+}
+
+@media (max-width: 420px) {
+  .score-code-entry { flex-direction: column; }
+  .score-code-entry input { width: 100%; }
+  .score-code-entry .button { width: 100%; }
+}
