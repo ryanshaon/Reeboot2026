@@ -45,24 +45,21 @@ export function createPostgresStore(url) {
       catch (error) { throw databaseError(error); }
     },
     async update(callback) {
+      // Take the event write lock first, then read, change and save inside one transaction.
+      // Saves queue behind each other instead of racing, so simultaneous submissions never
+      // exhaust a retry budget. A thrown callback error rolls the whole transaction back.
       try {
         const sql = await getPostgresClient(url);
-        for (let attempt = 0; attempt < 8; attempt += 1) {
-          const { revision, state } = await snapshot(sql);
+        return await sql.begin(async (tx) => {
+          await tx`SELECT pg_advisory_xact_lock(7748160342561)`;
+          const { state } = await readSnapshot(tx);
           const before = structuredClone(state);
           const result = await callback(state);
           const diff = diffState(before, state);
-          const committed = await sql.begin(async (tx) => {
-            await tx`SELECT pg_advisory_xact_lock(7748160342561)`;
-            const [current] = await tx`SELECT revision FROM reboot.event_meta WHERE id = true`;
-            if (current.revision !== revision) return false;
-            await applyDiff(tx, diff, state);
-            await tx`UPDATE reboot.event_meta SET revision = revision + 1 WHERE id = true`;
-            return true;
-          });
-          if (committed) return result;
-        }
-        throw Object.assign(new Error('Database changed repeatedly while updating. Retry the request.'), { status: 503 });
+          await applyDiff(tx, diff, state);
+          await tx`UPDATE reboot.event_meta SET revision = revision + 1 WHERE id = true`;
+          return result;
+        });
       } catch (error) { throw databaseError(error); }
     },
   };
