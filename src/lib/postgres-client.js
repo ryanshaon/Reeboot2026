@@ -18,7 +18,9 @@ export function createClientCache(factory) {
 
 export const getPostgresClient = createClientCache(async (url) => {
   const { default: postgres } = await import('postgres');
-  return postgres(url, { max: 1, prepare: false, idle_timeout: 20, connect_timeout: 10 });
+  // A small pool lets concurrent requests on one warm serverless instance use separate
+  // connections through Supabase's transaction pooler instead of queueing on a single one.
+  return postgres(url, { max: 10, prepare: false, idle_timeout: 20, connect_timeout: 10 });
 });
 
 export function databaseError(error, force = false) {

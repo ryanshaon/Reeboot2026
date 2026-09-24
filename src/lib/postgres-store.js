@@ -1,7 +1,13 @@
 import { diffState, rowToState } from './postgres-state.js';
 import { getPostgresClient, databaseError } from './postgres-client.js';
 
-async function snapshot(sql) {
+// Run the concurrent reads inside one transaction: Supabase's transaction pooler (port 6543)
+// can stall when several queries are pipelined on a connection outside a transaction.
+function snapshot(sql) {
+  return sql.begin((tx) => readSnapshot(tx));
+}
+
+async function readSnapshot(sql) {
   for (let attempt = 0; attempt < 5; attempt += 1) {
     const [before] = await sql`SELECT revision FROM reboot.event_meta WHERE id = true`;
     if (!before) throw Object.assign(new Error('Database schema is missing its event_meta row. Run npm run db:migrate.'), { status: 503 });
